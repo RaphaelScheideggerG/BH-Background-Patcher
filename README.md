@@ -3,12 +3,16 @@
 ### O Problema
 No cenário competitivo de Brawlhalla, a clareza visual é fundamental. Muitos jogadores preferem substituir os fundos detalhados dos mapas por imagens minimalistas ou cores sólidas para aumentar o contraste e maximizar a taxa de quadros (FPS). No entanto, o jogo exige que o usuário substitua manualmente no diretório da Steam, renomeando cada um deles para corresponder ao mapa específico — um processo repetitivo, propenso a erros e ineficiente.
 
----
-
 ### A Solução
 O BBP é uma ferramenta desktop desenvolvida em Python que automatiza esse "gargalo" de produtividade. Com apenas um clique, o software valida o diretório do jogo, realiza o backup das texturas originais e aplica a nova imagem de fundo em todos os mapas selecionados.
 
 ---
+
+### Tech Stack
+Linguagem: Python 3.12+
+GUI Framework: PySide6 (Qt for Python)
+Manipulação de Arquivos: os, shutil, pathlib
+Build Tool: PyInstaller (para o .exe futuro)
 
 ### Funcionalidades
 1. GUI
@@ -31,7 +35,8 @@ O BBP é uma ferramenta desktop desenvolvida em Python que automatiza esse "garg
 - Flet -> framework para projeto simples... ✖️
 - PySide6 -> biblioteca oficial (licença LGPL) ✔️
 
-2. Normalizar o tamanho da janela para diferentes resoluções ou não? 
+2. Normalizar janelas e lidar com DPI alto.
+- Uso do estilo "Fusion" e layouts dinâmicos (QVBoxLayout), garantindo que a interface se adapte sem quebrar o design.
 
 3. Validar o local da pasta e preenchimento automático
 
@@ -53,6 +58,8 @@ BH-Background-Patcher/
 │   └── ui/                 # Arquivos de interface (.ui do Designer ou .py)
 │       ├── __init__.py
 │       └── main_window.py
+│       └── mode_selection.py
+│       └── path_selection.py
 │
 ├── tests/                  # Para testes unitarios
 │   ├── __init__.py
@@ -61,3 +68,9 @@ BH-Background-Patcher/
 │
 └── assets/                 # Ícones, imagens de exemplo e sons
     └── app_icon.ico
+
+### Roadmap
+[ ] Implementação de sistema de Backup Automático antes do Patch.
+[ ] Preview em tempo real da imagem selecionada.
+[ ] Suporte a conversão automática de .png/.webp para .jpg.
+[ ] Botão de "Restore" (Reverter para o original).
