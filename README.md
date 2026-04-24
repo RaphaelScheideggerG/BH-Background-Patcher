@@ -22,6 +22,10 @@ Build Tool: PyInstaller (para o .exe futuro)
 5. Opção de modo para seleção especifica ou exceção dos arquivos a serem substituidos
 6. Alguns fundos já inclusos para seleção com previsualização
 7. Sugerir caminho para reverter mudanças
+8. Backup e opção para reverter alterações (pendente)
+9. Criar executável (pendente)
+10. Preview (pendente)
+11. redimensionar imagem caso seja menor que o jogo requer (pendente)
 
 ---
 
@@ -72,5 +76,4 @@ BH-Background-Patcher/
 ### Roadmap
 [ ] Implementação de sistema de Backup Automático antes do Patch.
 [ ] Preview em tempo real da imagem selecionada.
-[ ] Suporte a conversão automática de .png/.webp para .jpg.
 [ ] Botão de "Restore" (Reverter para o original).

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout, QFileDialog, QApplication)
 from PySide6.QtCore import Qt
 from .mode_selection import ModeSelection
-from logic import apply_patch, get_default_brawlhalla_path, verify_path
+from logic import run_patch_process
 
 
 class MainWindow(QWidget):
@@ -76,43 +76,31 @@ class MainWindow(QWidget):
 
     def on_start_clicked(self):
         if not self.file_path:
-            self.label_header.setText("⚠️ SELECIONE O FUNDO PRIMEIRO!")
-            self.label_header.setStyleSheet("color: red; font-weight: bold;")
-            return
-        
-        # Tenta encontrar o caminho do jogo automaticamente
-        game_path = get_default_brawlhalla_path()
-
-        if not game_path or not verify_path(game_path):
-            self.label_header.setText("⚠️ PASTA DO BRAWLHALLA NÃO ENCONTRADA!")
-            self.label_header.setStyleSheet("color: red; font-weight: bold;")
+            self.update_status("⚠️ SELECIONE O FUNDO PRIMEIRO!", "red")
             return
 
-        # Puxando os dados do componente filho
-        modo_excecao = self.mode_selector.get_mode()
-        lista_de_arquivos = self.mode_selector.get_files_list()
-
-        # Aplicando o patch com base nas escolhas do usuário
         try:
-            total_alterado = apply_patch(
-                game_path, 
+            # Pega os dados dos componentes filhos
+            modo_excecao = self.mode_selector.get_mode()
+            lista_de_arquivos = self.mode_selector.get_files_list()
+
+            # Roda o modulo principal de execução
+            total, final_path = run_patch_process(
                 self.file_path, 
                 modo_excecao, 
                 lista_de_arquivos
             )
 
-            # Feedback para o usuário 
-            self.label_header.setText(f"✅ SUCESSO! {total_alterado} MAPAS ALTERADOS!")
-            self.label_header.setStyleSheet("color: #2ecc71; font-weight: bold;")
-            print(f"Patch aplicado com sucesso em {total_alterado} arquivos.")
-            
-        except Exception as e:
-            self.label_header.setText(f"❌ ERRO CRÍTICO: {str(e)}")
-            self.label_header.setStyleSheet("color: orange; font-weight: bold;")
+            # Feedback visual de sucesso na UI
+            self.update_status(f"✅ SUCESSO! {total} MAPAS ALTERADOS!", "#2ecc71")
 
-        print("--- INICIANDO PATCH ---")
-        print(f"Modo: {'EXCEÇÃO' if modo_excecao else 'ESPECÍFICO'}")
-        print(f"Quantidade na lista: {len(lista_de_arquivos)}")
-        print(f"Arquivo Principal: {self.file_path}")
-        print(f"Caminho do Jogo: {game_path}")
-        print("----------------------")
+        except FileNotFoundError as e:
+            self.update_status(f"⚠️ {str(e)}", "orange")
+        except Exception as e:
+            self.update_status(f"❌ ERRO CRÍTICO: {str(e)}", "red")
+
+    # Função para evitar repetição de código na alteração do label
+    def update_status(self, text, color):
+        """Função auxiliar para não repetir código de estilo"""
+        self.label_header.setText(text)
+        self.label_header.setStyleSheet(f"color: {color}; font-weight: bold;")

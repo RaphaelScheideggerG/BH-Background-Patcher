@@ -73,3 +73,30 @@ def verify_path(mapart_path):
     # Caso contrário, verifica se é a pasta do jogo com o subdiretório "mapArt/Backgrounds"
     required_subdir = os.path.join(mapart_path, "mapArt", "Backgrounds")
     return os.path.exists(required_subdir)
+
+def run_patch_process(source_file, exception_mode, file_list):
+    """
+    Executa o patch
+    Retorna o total de arquivos alterados ou levanta uma Exception com os detalhes.
+    """
+    # 1. Busca o caminho automaticamente
+    game_path = get_default_brawlhalla_path()
+    
+    # 2. Validações de regra de negócio
+    if not game_path:
+        raise FileNotFoundError("Diretório do Brawlhalla não encontrado automaticamente.")
+    
+    if not verify_path(game_path):
+        raise NotADirectoryError("O caminho do jogo existe, mas a estrutura de pastas é inválida.")
+
+    total = apply_patch(game_path, source_file, exception_mode, file_list)
+    
+    # log de execução
+    print("--- INICIANDO PATCH ---")
+    print(f"Modo: {'EXCEÇÃO' if exception_mode else 'ESPECÍFICO'}")
+    print(f"Quantidade na lista: {len(file_list)}")
+    print(f"Arquivo Principal: {source_file}")
+    print(f"Caminho do Jogo: {game_path}")
+    print("----------------------") 
+
+    return total, game_path
