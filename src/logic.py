@@ -1,6 +1,10 @@
 import os
+import sys
 import shutil
 import platform
+import tempfile
+from PIL import Image
+from pathlib import Path
 
 
 def get_default_brawlhalla_path():
@@ -40,25 +44,34 @@ def apply_patch(game_path, source_img, mode_exception, target_list):
         bg_dir = game_path
     else:
         bg_dir = os.path.join(game_path, "mapArt", "Backgrounds")
-    
-    all_maps = get_all_backgrounds(bg_dir)
-    
-    # --- O AJUSTE DE ELITE ---
-    # Pegamos apenas o nome final de cada arquivo que o usuário selecionou
-    # Ex: 'C:/Downloads/BG_Small.jpg' vira 'BG_Small.jpg'
-    clean_target_list = [os.path.basename(t) for t in target_list]
-    
-    if mode_exception:
-        # Substitui tudo, exceto os que estão na lista de exceção
-        to_replace = [m for m in all_maps if m not in clean_target_list]
-    else:
-        # Substitui APENAS os que estão na lista de alvos
-        to_replace = [m for m in all_maps if m in clean_target_list]
 
-    for map_file in to_replace:
-        dest = os.path.join(bg_dir, map_file)
-        shutil.copy(source_img, dest)
+    make_backup(bg_dir)  # Faz backup se ainda não tiver sido feito
+
+    # Redimensiona antes de copiar, e guarda o caminho temporário
+    temp_path = resize_image(source_img)
+    to_replace = [] # inicializa a variável para garantir que esteja definida mesmo se ocorrer um erro antes do loop de substituição
+
+    try:
+        all_maps = get_all_backgrounds(bg_dir)
+        # Pega apenas o nome final de cada arquivo que o usuário selecionou para facilitar a comparação (sem caminhos)
+        clean_target_list = [os.path.basename(t) for t in target_list]
         
+        if mode_exception:
+            # Substitui tudo, exceto os que estão na lista de exceção
+            to_replace = [m for m in all_maps if m not in clean_target_list]
+        else:
+            # Substitui APENAS os que estão na lista de alvos
+            to_replace = [m for m in all_maps if m in clean_target_list]
+
+        for map_file in to_replace:
+            dest = os.path.join(bg_dir, map_file)
+            shutil.copy(temp_path, dest)
+    
+    # Limpa o arquivo temporário criado
+    finally:        
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
     return len(to_replace)
 
 def verify_path(mapart_path):
@@ -79,10 +92,11 @@ def run_patch_process(source_file, exception_mode, file_list):
     Executa o patch
     Retorna o total de arquivos alterados ou levanta uma Exception com os detalhes.
     """
-    # 1. Busca o caminho automaticamente
-    game_path = get_default_brawlhalla_path()
+    # Busca o caminho automaticamente
+    if not game_path:
+        game_path = get_default_brawlhalla_path()
     
-    # 2. Validações de regra de negócio
+    # Validações de regra de negócio
     if not game_path:
         raise FileNotFoundError("Diretório do Brawlhalla não encontrado automaticamente.")
     
@@ -91,12 +105,88 @@ def run_patch_process(source_file, exception_mode, file_list):
 
     total = apply_patch(game_path, source_file, exception_mode, file_list)
     
-    # log de execução
-    print("--- INICIANDO PATCH ---")
-    print(f"Modo: {'EXCEÇÃO' if exception_mode else 'ESPECÍFICO'}")
-    print(f"Quantidade na lista: {len(file_list)}")
-    print(f"Arquivo Principal: {source_file}")
-    print(f"Caminho do Jogo: {game_path}")
+    # execution log
+    print("--- STARTING PATCH ---")
+    print(f"Mode: {'EXCEPTION' if exception_mode else 'SPECIFIC'}")
+    print(f"List quantity: {len(file_list)}")
+    print(f"Main file: {source_file}")
+    print(f"Game path: {game_path}")
     print("----------------------") 
 
     return total, game_path
+
+def resize_image(source_path, size=(1920, 1080)):
+    """
+    Redimensiona a imagem para o padrão do Brawlhalla.
+    Retorna o caminho do arquivo temporário gerado.
+    """
+    with Image.open(source_path) as img:
+        # Converte para RGB — necessário para salvar como JPG (remove alpha de PNGs)
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
+        width, height = img.size
+
+        if width < size[0] or height < size[1]:
+            # Imagem menor que o necessário: força o tamanho exato (upscale)
+            img = img.resize(size, Image.LANCZOS)
+        elif (width, height) != size:
+            # Imagem maior mas proporção diferente: reduz mantendo proporção
+            img.thumbnail(size, Image.LANCZOS)
+
+        # Cria um arquivo temporário que persiste até você deletar manualmente
+        tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        img.save(tmp.name, format="JPEG", quality=95)
+        tmp.close()
+        return tmp.name  # Retorna o caminho, ex: /tmp/tmpXk29a1.jpg
+
+# *
+# Backup e restore
+# *
+def get_backup_dir():
+    """Retorna o caminho da pasta de backup, criando-a se necessário."""
+    if getattr(sys, "frozen", False): # importante para detectar se está rodando como .exe empacotado
+        # Rodando como .exe empacotado
+        base = Path(sys.executable).parent
+    else:
+        # Rodando em dev — pasta raiz do projeto
+        base = Path(__file__).parent.parent
+
+    backup_dir = base / "bhbp_backup"
+    backup_dir.mkdir(exist_ok=True)
+    return backup_dir
+
+def make_backup(bg_dir):
+    """
+    Faz backup dos arquivos originais do jogo.
+    Só executa se a pasta de backup estiver vazia — garante que é sempre o original.
+    Retorna True se fez backup, False se já existia.
+    """
+    backup_dir = get_backup_dir()
+
+    # Pasta não vazia = backup já existe, não sobrescreve
+    if any(backup_dir.iterdir()):
+        return False
+
+    bg_path = Path(bg_dir)
+    for file in bg_path.glob("BG_*.jpg"):
+        shutil.copy(file, backup_dir / file.name)
+
+    return True
+
+def restore_backup(bg_dir):
+    """
+    Copia os arquivos do backup de volta para o diretório do jogo.
+    Retorna o número de arquivos restaurados, ou levanta erro se backup vazio.
+    """
+    backup_dir = get_backup_dir()
+
+    files = list(backup_dir.glob("BG_*.jpg"))
+    if not files:
+        raise FileNotFoundError("Nenhum backup encontrado. Faça um patch primeiro.")
+
+    bg_path = Path(bg_dir)
+    for file in files:
+        shutil.copy(file, bg_path / file.name)
+
+    return len(files)

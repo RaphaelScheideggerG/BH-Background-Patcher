@@ -22,14 +22,14 @@ Build Tool: PyInstaller (para o .exe futuro)
 5. Opção de modo para seleção especifica ou exceção dos arquivos a serem substituidos
 6. Alguns fundos já inclusos para seleção com previsualização
 7. Sugerir caminho para reverter mudanças
-8. Backup e opção para reverter alterações (pendente)
-9. Criar executável (pendente)
-10. Preview (pendente)
-11. redimensionar imagem caso seja menor que o jogo requer (pendente)
+8. redimensionar imagem caso seja menor que o jogo requer
+9. Backup e opção para reverter alterações 
+10. Criar executável
+11. Preview (pendente)
 
 ---
 
-### Desafios
+### Desafios / Decisões
 0. Isolar ambiente e compilar programa para windows (.exe) e linux (.deb)
 - penso depois do MVP
 
@@ -43,6 +43,14 @@ Build Tool: PyInstaller (para o .exe futuro)
 - Uso do estilo "Fusion" e layouts dinâmicos (QVBoxLayout), garantindo que a interface se adapte sem quebrar o design.
 
 3. Validar o local da pasta e preenchimento automático
+- verificação de existencia do diretório e preenchimento automático para diretórios padrões baseado no sistema operacional
+
+4. Tecnicas de redimensionamento de imagens para os padrões do jogo (fit x fill) e estilo de salvamento da imagem redimensionada como copia.
+- 
+- tempfile ou salvar na pasta do executável -> tempfile polui menos o ambiente, ideal para um programa de uso simples e direto.
+
+5. Formato de backup dos arquivos originais na pasta.
+- 
 
 ---
 
@@ -72,8 +80,3 @@ BH-Background-Patcher/
 │
 └── assets/                 # Ícones, imagens de exemplo e sons
     └── app_icon.ico
-
-### Roadmap
-[ ] Implementação de sistema de Backup Automático antes do Patch.
-[ ] Preview em tempo real da imagem selecionada.
-[ ] Botão de "Restore" (Reverter para o original).
