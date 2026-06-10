@@ -126,6 +126,7 @@ class MainWindow(QWidget):
             lista_de_arquivos = self.mode_selector.get_files_list()
 
             total, final_path = run_patch_process(
+                game_path,
                 self.file_path, 
                 modo_excecao, 
                 lista_de_arquivos
