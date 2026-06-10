@@ -1,4 +1,3 @@
-# src/ui/mode_selection.py
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QLabel, QFileDialog, QPushButton
 from PySide6.QtCore import Qt
 
@@ -50,3 +49,4 @@ class ModeSelection(QWidget):
             self.exceptions = arquivos
             txt = "Exceções" if self.exeption_mode.isChecked() else "Alvos"
             self.counter_label.setText(f"{txt} na lista: {len(self.exceptions)}")
+            

@@ -1,4 +1,3 @@
-import os
 import sys
 import shutil
 import platform
@@ -9,52 +8,57 @@ from pathlib import Path
 
 def get_default_brawlhalla_path():
     system = platform.system()
-    home = os.path.expanduser("~")
+    home = Path.home()
     
-    # Dicionário de caminhos padrão por OS
+    # Dicionário de caminhos padrão por OS usando pathlib
     paths = {
-        "Windows": r"C:\Program Files (x86)\Steam\steamapps\common\Brawlhalla",
-        "Linux": os.path.join(home, ".local/share/Steam/steamapps/common/Brawlhalla"),
-        "Darwin": os.path.join(home, "Library/Application Support/Steam/steamapps/common/Brawlhalla") # MacOS no platform é 'Darwin'
+        "Windows": Path(r"C:\Program Files (x86)\Steam\steamapps\common\Brawlhalla"),
+        "Linux": home / ".local" / "share" / "Steam" / "steamapps" / "common" / "Brawlhalla",
+        "Darwin": home / "Library" / "Application Support" / "Steam" / "steamapps" / "common" / "Brawlhalla"
     }
 
     base_path = paths.get(system)
     if not base_path:
         return None
 
-    # Verifica o caminho completo até a mapArt
-    full_path = os.path.join(base_path, "mapArt", "Backgrounds")
+    # Verifica o caminho completo até a mapArt usando o operador /
+    full_path = base_path / "mapArt" / "Backgrounds"
     
-    if os.path.exists(full_path):
+    # Verifica a existência do diretório diretamente pelo objeto Path
+    if full_path.exists():
         return full_path
     return None
 
+
 def get_all_backgrounds(bg_dir):
-    """Varre a pasta final e retorna a lista de arquivos JPG que começam com BG_."""
-    if not os.path.exists(bg_dir):
+    """Varre a pasta final e retorna a lista de nomes de arquivos JPG que começam com BG_."""
+    # Garante que bg_dir seja um objeto Path, mesmo se passarem string
+    bg_dir = Path(bg_dir)
+    
+    if not bg_dir.exists():
         return []
     
-    # MUDANÇA: Agora checa o início (startswith) e a extensão (.jpg)
-    return [f for f in os.listdir(bg_dir) 
-            if f.startswith("BG_") and f.lower().endswith(".jpg")]
+    # .glob() busca direto por padrões, tornando o filtro mais rápido e limpo
+    # .name pega apenas o nome do arquivo com a extensão (ex: "BG_Desert.jpg")
+    return [f.name for f in bg_dir.glob("BG_*") if f.suffix.lower() == ".jpg"]
 
-def apply_patch(game_path, source_img, mode_exception, target_list):
-    # Garante o diretório correto
-    if game_path.endswith("Backgrounds"):
-        bg_dir = game_path
-    else:
-        bg_dir = os.path.join(game_path, "mapArt", "Backgrounds")
+
+def apply_patch(bg_dir, source_img, mode_exception, target_list):
+    """Aplica o patch copiando a imagem redimensionada para os arquivos de fundo do jogo. (Worker)"""
+    bg_dir = Path(bg_dir)
+    source_img = Path(source_img)
 
     make_backup(bg_dir)  # Faz backup se ainda não tiver sido feito
 
-    # Redimensiona antes de copiar, e guarda o caminho temporário
-    temp_path = resize_image(source_img)
-    to_replace = [] # inicializa a variável para garantir que esteja definida mesmo se ocorrer um erro antes do loop de substituição
+    # Redimensiona antes de copiar (resize_image deve retornar um objeto Path ou string)
+    temp_path = Path(resize_image(source_img))
+    to_replace = [] 
 
     try:
         all_maps = get_all_backgrounds(bg_dir)
-        # Pega apenas o nome final de cada arquivo que o usuário selecionou para facilitar a comparação (sem caminhos)
-        clean_target_list = [os.path.basename(t) for t in target_list]
+        
+        # Path(t).name extrai o nome do arquivo de forma segura, substituindo o os.path.basename
+        clean_target_list = [Path(t).name for t in target_list]
         
         if mode_exception:
             # Substitui tudo, exceto os que estão na lista de exceção
@@ -64,56 +68,64 @@ def apply_patch(game_path, source_img, mode_exception, target_list):
             to_replace = [m for m in all_maps if m in clean_target_list]
 
         for map_file in to_replace:
-            dest = os.path.join(bg_dir, map_file)
+            dest = bg_dir / map_file
+            # shutil aceita objetos Path nativamente a partir do Python 3.6
             shutil.copy(temp_path, dest)
     
     # Limpa o arquivo temporário criado
     finally:        
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        if temp_path.exists():
+            temp_path.unlink()
 
     return len(to_replace)
 
+
 def verify_path(mapart_path):
     """Verifica se o caminho existe e é uma pasta válida do Brawlhalla."""
-    if not os.path.exists(mapart_path):
+    mapart_path = Path(mapart_path)
+
+    # Verifica se o caminho existe    
+    if not mapart_path.exists():
         return False
     
-    # Verifica se o diretório selecionado é diretamente a pasta "Backgrounds"
-    if os.path.basename(mapart_path) == "Backgrounds":
+    # Verifica se é o diretório correto olhando o nome da pasta final (mapArt/Backgrounds)
+    if mapart_path.name == "Backgrounds":
         return True
     
-    # Caso contrário, verifica se é a pasta do jogo com o subdiretório "mapArt/Backgrounds"
-    required_subdir = os.path.join(mapart_path, "mapArt", "Backgrounds")
-    return os.path.exists(required_subdir)
+    # Monta o subdiretório usando o operador /
+    required_subdir = mapart_path / "mapArt" / "Backgrounds"
+    return required_subdir.exists()
 
-def run_patch_process(source_file, exception_mode, file_list):
+
+def run_patch_process(game_path, source_file, exception_mode, file_list):
     """
-    Executa o patch
-    Retorna o total de arquivos alterados ou levanta uma Exception com os detalhes.
+    Executor do patch (Controller)
+    Recebe o caminho validado da UI e coordena o processo.
     """
-    # Busca o caminho automaticamente
-    if not game_path:
-        game_path = get_default_brawlhalla_path()
+    game_path = Path(game_path)
     
-    # Validações de regra de negócio
-    if not game_path:
-        raise FileNotFoundError("Diretório do Brawlhalla não encontrado automaticamente.")
-    
+    # Garante que a UI não mandou um caminho inválido (extra de segurança)
     if not verify_path(game_path):
-        raise NotADirectoryError("O caminho do jogo existe, mas a estrutura de pastas é inválida.")
+        raise NotADirectoryError("Estrutura de pastas inválida para o Brawlhalla.")
 
-    total = apply_patch(game_path, source_file, exception_mode, file_list)
+    # 2. Define exatamente onde é a pasta Backgrounds
+    if game_path.name == "Backgrounds":
+        bg_dir = game_path
+    else:
+        bg_dir = game_path / "mapArt" / "Backgrounds"
+
+    # 3. Manda o operário trabalhar NA PASTA CERTA
+    total = apply_patch(bg_dir, source_file, exception_mode, file_list)
     
     # execution log
     print("--- STARTING PATCH ---")
     print(f"Mode: {'EXCEPTION' if exception_mode else 'SPECIFIC'}")
     print(f"List quantity: {len(file_list)}")
     print(f"Main file: {source_file}")
-    print(f"Game path: {game_path}")
+    print(f"Target dir: {bg_dir}")
     print("----------------------") 
 
-    return total, game_path
+    return total, bg_dir
 
 def resize_image(source_path, size=(1920, 1080)):
     """

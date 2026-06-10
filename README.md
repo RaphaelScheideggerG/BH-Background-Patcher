@@ -1,17 +1,17 @@
 # Brawlhalla Background Patcher (BHBP)
 
 ### O Problema
-No cenário competitivo de Brawlhalla, a clareza visual é fundamental. Muitos jogadores preferem substituir os fundos detalhados dos mapas por imagens minimalistas ou cores sólidas para aumentar o contraste e maximizar a taxa de quadros (FPS). No entanto, o jogo exige que o usuário substitua manualmente no diretório da Steam, renomeando cada um deles para corresponder ao mapa específico — um processo repetitivo, propenso a erros e ineficiente.
+No cenário competitivo de Brawlhalla, a clareza visual é fundamental. Muitos jogadores preferem substituir os fundos detalhados dos mapas por imagens minimalistas ou cores sólidas para aumentar o contraste e maximizar a taxa de quadros (FPS). No entanto, o jogo exige que o usuário faça essa substituição manualmente no diretório da Steam, renomeando arquivo por arquivo para corresponder a cada mapa. Esse processo manual se torna extremamente maçante e repetitivo, transformando-se em uma dor de cabeça constante para quem formata o PC com frequência, precisa reinstalar o jogo ou simplesmente gosta de alternar entre diferentes fundos de tela.
 
 ### A Solução
-O BBP é uma ferramenta desktop desenvolvida em Python que automatiza esse "gargalo" de produtividade. Com apenas um clique, o software valida o diretório do jogo, realiza o backup das texturas originais e aplica a nova imagem de fundo em todos os mapas selecionados.
+O BHBP é uma ferramenta desktop desenvolvida em Python que elimina essa repetição exaustiva. Pensado exatamente para facilitar a manutenção do seu setup visual após formatações ou reinstalações, o software automatiza todo o processo. Com apenas um clique, ele valida o diretório do jogo, realiza o backup das texturas originais e aplica a nova imagem de fundo em todos os mapas selecionados, poupando tempo e garantindo que você volte a jogar rapidamente.
 
 ---
 
 ### Tech Stack
 Linguagem: Python 3.12+
 GUI Framework: PySide6 (Qt for Python)
-Manipulação de Arquivos: os, shutil, pathlib
+Manipulação de Arquivos: shutil, pathlib
 Build Tool: PyInstaller (para o .exe futuro)
 
 ### Funcionalidades
@@ -25,7 +25,6 @@ Build Tool: PyInstaller (para o .exe futuro)
 8. redimensionar imagem caso seja menor que o jogo requer
 9. Backup e opção para reverter alterações 
 10. Criar executável
-11. Preview (pendente)
 
 ---
 
@@ -39,8 +38,8 @@ Build Tool: PyInstaller (para o .exe futuro)
 - Flet -> framework para projeto simples... ✖️
 - PySide6 -> biblioteca oficial (licença LGPL) ✔️
 
-2. Normalizar janelas e lidar com DPI alto.
-- Uso do estilo "Fusion" e layouts dinâmicos (QVBoxLayout), garantindo que a interface se adapte sem quebrar o design.
+2. Responsividade
+- Uso das QVboxes
 
 3. Validar o local da pasta e preenchimento automático
 - verificação de existencia do diretório e preenchimento automático para diretórios padrões baseado no sistema operacional
@@ -50,7 +49,7 @@ Build Tool: PyInstaller (para o .exe futuro)
 - tempfile ou salvar na pasta do executável -> tempfile polui menos o ambiente, ideal para um programa de uso simples e direto.
 
 5. Formato de backup dos arquivos originais na pasta.
-- 
+- Salva arquivos modificados em pasta local no diretório do instalador.
 
 ---
 
