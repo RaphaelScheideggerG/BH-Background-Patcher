@@ -68,14 +68,15 @@ BH-Background-Patcher/
 │   ├── logic.py            # O "Cérebro" (Funções de cópia, backup e validação)
 │   └── ui/                 # Arquivos de interface (.ui do Designer ou .py)
 │       ├── __init__.py
-│       └── main_window.py
-│       └── mode_selection.py
+│       ├── main_window.py
+│       ├── mode_selection.py
 │       └── path_selection.py
 │
-├── tests/                  # Para testes unitarios
+├── tests/                  # Para testes unitários
 │   ├── __init__.py
 │   ├── conftest.py         # Configurações globais do PyTest
 │   └── test_logic.py       # Testes das funções de arquivo e validação
 │
 └── assets/                 # Ícones, imagens de exemplo e sons
     └── app_icon.ico
+
