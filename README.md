@@ -56,27 +56,24 @@ Build Tool: PyInstaller (para o .exe futuro)
 ### Estrutura do Projeto
 
 BH-Background-Patcher/
-│
-├── .venv/                  # Ambiente virtual (isolado)
-├── .gitignore              # Ignora .venv, __pycache__, e arquivos temporários
-├── requirements.txt        # PySide6, pytest, etc.
-├── README.md               # Documentação épica
-│
-├── src/                    # Código-fonte (Core da aplicação)
-│   ├── __init__.py
-│   ├── main.py             # Ponto de entrada (Inicia a GUI)
-│   ├── logic.py            # O "Cérebro" (Funções de cópia, backup e validação)
-│   └── ui/                 # Arquivos de interface (.ui do Designer ou .py)
-│       ├── __init__.py
-│       ├── main_window.py
-│       ├── mode_selection.py
-│       └── path_selection.py
-│
-├── tests/                  # Para testes unitários
-│   ├── __init__.py
-│   ├── conftest.py         # Configurações globais do PyTest
-│   └── test_logic.py       # Testes das funções de arquivo e validação
-│
-└── assets/                 # Ícones, imagens de exemplo e sons
-    └── app_icon.ico
+- .venv/                  (Ambiente virtual isolado)
+- .gitignore              (Ignora .venv, __pycache__, e arquivos temporários)
+- requirements.txt        (Dependências: PySide6, pytest, etc.)
+- README.md               (Documentação épica)
 
+src/                      (Código-fonte principal)
+- __init__.py
+- main.py                 (Ponto de entrada da GUI)
+- logic.py                (Funções de cópia, backup e validação)
+- ui/                     (Interfaces gráficas .ui ou .py)
+  - __init__.py
+  - main_window.py
+  - mode_selection.py
+
+tests/                    (Testes unitários)
+- __init__.py
+- conftest.py             (Configurações globais do PyTest)
+- test_logic.py           (Testes das funções de arquivo e validação)
+
+assets/                   (Ícones, imagens e sons)
+- app_icon.ico
