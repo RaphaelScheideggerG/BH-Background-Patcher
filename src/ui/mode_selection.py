@@ -3,8 +3,9 @@ from PySide6.QtCore import Qt
 
 
 class ModeSelection(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, get_game_path, parent=None):
         super().__init__(parent)
+        self.get_game_path = get_game_path
         self.exceptions = []
         self._setup_ui()
 
@@ -17,7 +18,7 @@ class ModeSelection(QWidget):
         self.especific_mode = QRadioButton("Modo Específico (Substituir apenas estes)")
 
         # Botão de seleção para a lista secundária
-        self.select_list_button = QPushButton("📂 Selecionar Lista de Arquivos (Opcional)")
+        self.select_list_button = QPushButton("📂 Selecionar Lista de Arquivos para Substituição (Opcional)")
         self.select_list_button.clicked.connect(self.select_list_files)
 
         # Contador de arquivos na lista secundária
@@ -38,15 +39,22 @@ class ModeSelection(QWidget):
     def get_files_list(self):
         """Retorna a lista de arquivos selecionados para o pai."""
         return self.exceptions
-    
+            
     def select_list_files(self):
         """Abre o seletor para a lista secundária (Exceções ou Específicos)."""
         titulo = "Selecionar Exceções" if self.exeption_mode.isChecked() else "Selecionar Alvos"
+
+        # Define o diretório inicial. Se self.gamepath for None, ele cai para "." (pasta atual)
+        diretorio_inicial = self.get_game_path() or "."
+
         arquivos, _ = QFileDialog.getOpenFileNames(
-            self, titulo, ".", "Imagens (*.png *.jpg *.jpeg)"
+            self, 
+            titulo, 
+            str(diretorio_inicial), 
+            "Imagens (*.png *.jpg *.jpeg)"
         )
+
         if arquivos:
             self.exceptions = arquivos
             txt = "Exceções" if self.exeption_mode.isChecked() else "Alvos"
             self.counter_label.setText(f"{txt} na lista: {len(self.exceptions)}")
-            

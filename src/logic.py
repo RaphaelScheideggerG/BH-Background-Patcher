@@ -43,9 +43,9 @@ def get_all_backgrounds(bg_dir):
     return [f.name for f in bg_dir.glob("BG_*") if f.suffix.lower() == ".jpg"]
 
 
-def apply_patch(bg_dir, source_img, mode_exception, target_list):
+def apply_patch(game_path, source_img, mode_exception, target_list):
     """Aplica o patch copiando a imagem redimensionada para os arquivos de fundo do jogo. (Worker)"""
-    bg_dir = Path(bg_dir)
+    bg_dir = Path(game_path)
     source_img = Path(source_img)
 
     make_backup(bg_dir)  # Faz backup se ainda não tiver sido feito
@@ -127,7 +127,7 @@ def run_patch_process(game_path, source_file, exception_mode, file_list):
 
     return total, bg_dir
 
-def resize_image(source_path, size=(1920, 1080)):
+def resize_image(source_path, size=(2048, 1151)):
     """
     Redimensiona a imagem para o padrão do Brawlhalla.
     Retorna o caminho do arquivo temporário gerado.

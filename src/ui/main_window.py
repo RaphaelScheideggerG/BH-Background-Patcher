@@ -8,17 +8,20 @@ from logic import run_patch_process, restore_backup, get_default_brawlhalla_path
 class MainWindow(QWidget):
     """Janela principal da aplicação."""
     
+    """Constructor da MainWindow. Inicializa a interface e define os elementos principais."""
     def __init__(self, parent=None):
         super().__init__(parent)
         
         self.file_path = ""
+        self.game_path = None
         self.exceptions = []
 
         self.setWindowTitle("Brawlhalla Background Patcher")
         self.resize(450, 300)
-        self.mode_selector = ModeSelection()
+        self.mode_selector = ModeSelection(self._get_game_path)
         self._setup_ui()
 
+    """Configura a interface do usuário, adicionando botões, labels e layouts."""
     def _setup_ui(self):
         layout = QVBoxLayout()
         layout.setSpacing(12)
@@ -82,7 +85,7 @@ class MainWindow(QWidget):
         """)
         self.btn_donate.clicked.connect(self.on_donate_clicked)
 
-        # Linha de baixo: restore | donate | START
+        # Linha de baixo: restore | START | donate
         bottom_layout = QHBoxLayout()
         bottom_layout.addWidget(self.btn_restore, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         bottom_layout.addStretch()
@@ -110,6 +113,7 @@ class MainWindow(QWidget):
         if file_path:
             self.file_path = file_path
             self.file_path_label.setText(f"Principal: {file_path.split('/')[-1]}")
+            
 
     def on_start_clicked(self):
         if not self.file_path:
@@ -153,7 +157,7 @@ class MainWindow(QWidget):
             self.update_status(f"❌ ERRO AO RESTAURAR: {str(e)}", "red")
 
     def on_donate_clicked(self):
-        QDesktopServices.openUrl(QUrl("https://ko-fi.com/SEU_USUARIO"))
+        QDesktopServices.openUrl(QUrl("https://ko-fi.com"))
 
     def update_status(self, text, color):
         self.label_header.setText(text)
@@ -167,6 +171,7 @@ class MainWindow(QWidget):
         """
         path = get_default_brawlhalla_path()
         if path:
+            self.game_path = path # Armazena o caminho encontrado para uso futuro
             return path
 
         # Não encontrou automaticamente — abre diálogo
@@ -178,11 +183,10 @@ class MainWindow(QWidget):
         )
 
         if not selected:
-            # Usuário fechou o diálogo sem selecionar
             return None
 
         if not verify_path(selected):
             self.update_status("⚠️ Pasta inválida. Selecione a pasta do jogo.", "orange")
             return None
-
+        self.game_path = selected
         return selected
