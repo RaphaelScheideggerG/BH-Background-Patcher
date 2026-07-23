@@ -127,6 +127,7 @@ def run_patch_process(game_path, source_file, exception_mode, file_list):
 
     return total, bg_dir
 
+
 def resize_image(source_path, size=(2048, 1151)):
     """
     Redimensiona a imagem para o padrão do Brawlhalla.
