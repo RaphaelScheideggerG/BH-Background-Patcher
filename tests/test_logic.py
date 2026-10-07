@@ -97,12 +97,12 @@ def test_verify_path_inexistente():
 # resize_image
 # ==============================================================================
 
-def test_resize_image_upscale(sample_image):
-    """Imagem menor que 1920x1080 deve ser forçada para o tamanho exato."""
+def test_resize_image_upscale_mantendo_proporcao(sample_image):
+    """Imagem menor que 2048x1151 deve ser forçada para o tamanho exato."""
     temp_path = resize_image(str(sample_image))
     try:
         with Image.open(temp_path) as img:
-            assert img.size == (1920, 1080)
+            assert img.size == (2048, 1151)
     finally:
         os.remove(temp_path)
 
@@ -125,16 +125,28 @@ def test_resize_image_retorna_jpg(sample_image):
 def test_resize_image_nao_upscale_se_ja_correto(tmp_path):
     """Imagem já no tamanho certo não deve ser alterada nas dimensões."""
     img_path = tmp_path / "exact.png"
-    img = Image.new("RGB", (1920, 1080))
+    img = Image.new("RGB", (2048, 1151))
     img.save(img_path)
 
     temp_path = resize_image(str(img_path))
     try:
         with Image.open(temp_path) as img:
-            assert img.size == (1920, 1080)
+            assert img.size == (2048, 1151)
     finally:
         os.remove(temp_path)
 
+def test_resize_image_downscale_mantendo_proporcao(tmp_path):
+    """a imagem deve ser convertida para exatamente 2048×1151, mesmo que isso implique alteração da proporção original."""
+    img_path = tmp_path / "exact.png"
+    img = Image.new("RGB", (4000, 4000))
+    img.save(img_path)
+
+    temp_path = resize_image(str(img_path))
+    try:
+        with Image.open(temp_path) as img:
+            assert img.size == (2048, 1151)
+    finally:
+        os.remove(temp_path)
 
 # ==============================================================================
 # apply_patch
@@ -213,17 +225,21 @@ def test_make_backup_copia_todos_os_mapas(fake_bg_dir, fake_backup_dir):
     arquivos = list(fake_backup_dir.glob("BG_*.jpg"))
     assert len(arquivos) == 3
 
-def test_make_backup_nao_sobrescreve_se_ja_existe(fake_bg_dir, fake_backup_dir):
-    """Se o backup já existe (pasta não vazia), não deve fazer nada."""
-    # Simula backup já feito com conteúdo diferente
+def test_make_backup_nao_sobrescreve_arquivo_se_arquivo_ja_existe(fake_bg_dir, fake_backup_dir):
+    """Se o backup de um arquivo já existe, ele não deve ser sobrescrito."""
     (fake_backup_dir / "BG_Small.jpg").write_bytes(b"backup_antigo")
 
     with patch("src.logic.get_backup_dir", return_value=fake_backup_dir):
         result = make_backup(str(fake_bg_dir))
 
-    assert result is False
-    # Conteúdo original do backup não foi alterado
+    assert result is True
+
+    # O backup existente permanece intacto
     assert (fake_backup_dir / "BG_Small.jpg").read_bytes() == b"backup_antigo"
+
+    # Os demais arquivos ainda podem ser adicionados
+    assert (fake_backup_dir / "BG_Brawlhaven.jpg").exists()
+    assert (fake_backup_dir / "BG_Twilight.jpg").exists()
 
 def test_make_backup_conteudo_identico_ao_original(fake_bg_dir, fake_backup_dir):
     with patch("src.logic.get_backup_dir", return_value=fake_backup_dir):
