@@ -310,6 +310,7 @@ BH-Background-Patcher/
 
 ---
 
+<a id="como-gerar-os-executaveis"></a>
 ## 🏗️ Como gerar os executáveis
 
 O projeto utiliza **PyInstaller** para gerar executáveis independentes.
