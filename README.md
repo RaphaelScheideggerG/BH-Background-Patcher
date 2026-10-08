@@ -334,7 +334,7 @@ dist/BHBP
 O executável de Windows deve ser gerado em um ambiente Windows.
 
 ```powershell
-pyinstaller --clean --name BHBP --windowed --onefile --paths src --icon docs/bhbp_logo.ico src/main.py
+pyinstaller --clean --name BHBP --windowed --onefile --paths src --icon assets/bhbp_logo.ico src/main.py
 ```
 
 O resultado será:
